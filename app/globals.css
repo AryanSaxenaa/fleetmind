@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* --- Editorial Monochrome Palette --- */
+  --color-primary: #1a1a1a;
+  --color-dark: #0a0a0a;
+  --color-cream: #f5f5f0;
+  --color-border: #e5e5e0;
+  --color-muted: #a3a3a3;
+
+  /* --- Font --- */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", "Georgia", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* --- Animations --- */
+  --animate-pulse-ring: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-in-up: fade-in-up 0.5s ease-out;
+  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-cream);
+}
+
+/* Editorial card */
+.editorial-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+/* AI chat bubble — editorial style */
+.ai-bubble {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+}
+
+/* Cross-hatched decorative border */
+.hatch-border {
+  position: relative;
+}
+.hatch-border::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin-top: 12px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    var(--color-border) 2px,
+    var(--color-border) 3px
+  );
+  border-radius: 2px;
+}
+
+/* Horizontal hatched divider — standalone */
+.hatch-divider {
+  width: 100%;
+  height: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    #d4d4cf 2px,
+    #d4d4cf 3px
+  );
+  border-radius: 2px;
+}
+
+/* Serif heading utility */
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+/* Scrollbar styling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4cf transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #d4d4cf;
+  border-radius: 3px;
+}
+
+/* Prose overrides for AI messages */
+.prose-fleet strong {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Image placeholder */
+.illustration-placeholder {
+  background: #f0f0eb;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}

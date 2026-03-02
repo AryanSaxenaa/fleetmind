@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm-9_x"]
+
+[phases.install]
+cmds = ["pnpm i --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm run build"]
+cacheDirectories = [".next/cache", "node_modules/.cache"]
+
+[start]
+cmd = "pnpm start"

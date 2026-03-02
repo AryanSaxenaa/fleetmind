@@ -1,0 +1,105 @@
+{
+  "name": "FleetMind - Fleet Sentinel",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 15 }]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.FLEETMIND_BASE_URL }}/api/cron/sentinel",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "secret", "value": "={{ $env.CRON_SECRET }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "id": "http-sentinel",
+      "name": "Call Sentinel API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "severity-check",
+              "leftValue": "={{ $json.severity }}",
+              "rightValue": "clear",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-alerts",
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🚨 Fleet Sentinel Alert — {{ $json.severity.toUpperCase() }}\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": {{ JSON.stringify($json.narrative) }}\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"fields\": [\n        { \"type\": \"mrkdwn\", \"text\": \"*Active:* {{ $json.fleet_summary.active }}\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Offline:* {{ $json.fleet_summary.offline }}\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Alerts:* {{ $json.alerts_count }}\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Severity:* {{ $json.severity }}\" }\n      ]\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        { \"type\": \"mrkdwn\", \"text\": \"FleetMind Sentinel via n8n • {{ $json.timestamp }}\" }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "slack-webhook",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {},
+      "id": "no-op",
+      "name": "All Clear",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [880, 400]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [[{ "node": "Call Sentinel API", "type": "main", "index": 0 }]]
+    },
+    "Call Sentinel API": {
+      "main": [[{ "node": "Has Alerts?", "type": "main", "index": 0 }]]
+    },
+    "Has Alerts?": {
+      "main": [
+        [{ "node": "Send Slack Alert", "type": "main", "index": 0 }],
+        [{ "node": "All Clear", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fleetmind-sentinel"
+  },
+  "tags": [
+    { "name": "FleetMind" },
+    { "name": "Geotab" },
+    { "name": "Fleet Monitoring" }
+  ]
+}

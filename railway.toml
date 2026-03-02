@@ -1,0 +1,19 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/api/fleet-status"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[[crons]]
+name = "Fleet Sentinel"
+schedule = "*/15 * * * *"
+command = "curl -sf $RAILWAY_PUBLIC_DOMAIN/api/cron/sentinel?secret=$CRON_SECRET || true"
+
+[[crons]]
+name = "Weekly Report"
+schedule = "0 8 * * 0"
+command = "curl -sf $RAILWAY_PUBLIC_DOMAIN/api/cron/weekly-report?secret=$CRON_SECRET || true"

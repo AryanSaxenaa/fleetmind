@@ -1,0 +1,95 @@
+{
+  "name": "FleetMind - Weekly Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "weekly-trigger",
+      "name": "Sunday 8 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.FLEETMIND_BASE_URL }}/api/cron/weekly-report",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "secret", "value": "={{ $env.CRON_SECRET }}" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      },
+      "id": "http-report",
+      "name": "Generate Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"📊 FleetMind Weekly Report\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": {{ JSON.stringify($json.report.substring(0, 2900)) }}\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"fields\": [\n        { \"type\": \"mrkdwn\", \"text\": \"*Fleet:* {{ $json.summary.fleet_total }} vehicles\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Active:* {{ $json.summary.fleet_active }}\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Maintenance:* {{ $json.summary.maintenance_critical }} critical\" },\n        { \"type\": \"mrkdwn\", \"text\": \"*Fuel Waste:* ${{ $json.summary.fuel_waste_usd }}\" }\n      ]\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        { \"type\": \"mrkdwn\", \"text\": \"FleetMind Weekly Report via n8n • {{ $json.timestamp }}\" }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "slack-report",
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM || 'fleetmind@example.com' }}",
+        "toEmail": "={{ $env.REPORT_EMAIL }}",
+        "subject": "=FleetMind Weekly Fleet Report — {{ new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}",
+        "emailType": "text",
+        "message": "={{ $json.report }}"
+      },
+      "id": "email-report",
+      "name": "Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [660, 400],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Sunday 8 AM": {
+      "main": [[{ "node": "Generate Weekly Report", "type": "main", "index": 0 }]]
+    },
+    "Generate Weekly Report": {
+      "main": [
+        [
+          { "node": "Send to Slack", "type": "main", "index": 0 },
+          { "node": "Email Report", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fleetmind-weekly-report"
+  },
+  "tags": [
+    { "name": "FleetMind" },
+    { "name": "Geotab" },
+    { "name": "Weekly Report" }
+  ]
+}
