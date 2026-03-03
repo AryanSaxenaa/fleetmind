@@ -63,7 +63,25 @@ export async function deleteGeofence(zoneId: string) {
 }
 
 export async function listGeofences(limit: number = 100) {
-  const zones = await geotabGet<any>("Zone", { resultsLimit: limit });
+  // Only fetch zones in the accessible company group to avoid listing
+  // system/restricted zones that the user cannot delete.
+  let groupFilter: Record<string, any> | undefined;
+  try {
+    const groups = await geotabGet<any>("Group", { resultsLimit: 200 });
+    const companyGroup =
+      groups.find((g: any) => g.id === "GroupCompanyId") ||
+      groups.find((g: any) => !g.parent) ||
+      groups[0];
+    if (companyGroup) {
+      groupFilter = { groups: [{ id: companyGroup.id }] };
+    }
+  } catch {
+    // Fall through without filter
+  }
+  const zones = await geotabGet<any>("Zone", {
+    resultsLimit: limit,
+    ...(groupFilter ? { search: groupFilter } : {}),
+  });
   return zones.map((z) => ({
     ...z,
     points: Array.isArray(z.points)

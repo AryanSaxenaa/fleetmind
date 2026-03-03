@@ -10,7 +10,6 @@ import {
   RefreshCw,
   X,
   Activity,
-  Image,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -79,12 +78,7 @@ export function FleetSidebar({ onClose }: FleetSidebarProps) {
         )}
       </div>
 
-      {/* Illustration Placeholder */}
-      <div className="mx-6 mt-6 h-28 illustration-placeholder rounded-lg">
-        <Image className="h-5 w-5 opacity-40" />
-      </div>
-
-      {/* Metric Cards */}
+      {/* Metric Cards */
       <div className="px-6 mt-6 space-y-3">
         <p className="text-[10px] font-semibold text-muted uppercase tracking-widest">
           Fleet Overview

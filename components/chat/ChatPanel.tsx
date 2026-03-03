@@ -8,7 +8,6 @@ import {
   RefreshCw,
   AlertTriangle,
   PlusCircle,
-  Image,
 } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { QuickActions } from "./QuickActions";
@@ -59,11 +58,6 @@ export function ChatPanel() {
       >
         {messages.length === 0 && (
           <div className="max-w-2xl mx-auto">
-            {/* Welcome illustration placeholder */}
-            <div className="h-40 mb-8 illustration-placeholder rounded-lg">
-              <Image className="h-6 w-6 opacity-40" />
-            </div>
-
             <h2 className="font-editorial text-2xl font-bold text-primary mb-2">
               {getGreeting()}
             </h2>

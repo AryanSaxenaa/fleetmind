@@ -45,12 +45,6 @@ interface DVIRSummaryResult {
   }>;
 }
 
-interface AceResult {
-  answer: string;
-  sources?: any[];
-  raw?: any;
-}
-
 function useAsync<T>(loader: () => Promise<T>, deps: any[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,15 +83,11 @@ export function CommandCenter() {
   const [geoRadius, setGeoRadius] = useState(150);
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const [geoZones, setGeoZones] = useState<GeofenceZone[]>([]);
-  const [acePrompt, setAcePrompt] = useState("Show worst fuel efficiency vehicles this month");
-  const [aceResult, setAceResult] = useState<AceResult | null>(null);
-  const [aceLoading, setAceLoading] = useState(false);
-  const [aceError, setAceError] = useState<string | null>(null);
   const [dvirError, setDvirError] = useState<string | null>(null);
   const [replayIndex, setReplayIndex] = useState(0);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
-  const [focus, setFocus] = useState<"gps" | "geo" | "dvir" | "ace">("gps");
+  const [focus, setFocus] = useState<"gps" | "geo" | "dvir">("gps");
 
   const gps = useAsync<GPSTraceResult>(async () => {
     const res = await fetch(`/api/gps-traces?hours=${hours}&maxPointsPerVehicle=${maxPoints}`);
@@ -165,25 +155,6 @@ export function CommandCenter() {
     loadGeofences().catch(() => null);
   };
 
-  const runAce = async () => {
-    setAceLoading(true);
-    setAceError(null);
-    try {
-      const res = await fetch("/api/ace", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: acePrompt }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Ace query failed");
-      setAceResult(json as AceResult);
-    } catch (e: any) {
-      setAceError(e?.message || "Ace query failed");
-    } finally {
-      setAceLoading(false);
-    }
-  };
-
   const topBreadcrumbs = useMemo(() => {
     if (!gps.data) return [] as Array<{ name: string; point: GPSTracePoint }>;
     return gps.data.traces
@@ -249,7 +220,6 @@ export function CommandCenter() {
             <option value="gps">Live GPS</option>
             <option value="geo">Geofences</option>
             <option value="dvir">DVIR</option>
-            <option value="ace">Ace Insight</option>
           </select>
           <button
             onClick={() => setCollapsed(false)}
@@ -264,7 +234,7 @@ export function CommandCenter() {
       {!collapsed && (
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
         {/* GPS Live */}
-        {(focus === "gps" || focus === "geo" || focus === "dvir" || focus === "ace") && (
+        {(focus === "gps" || focus === "geo" || focus === "dvir") && (
         <div className="p-4 border border-border rounded-lg bg-white h-full flex flex-col">
           <div className="flex items-center gap-2 mb-2">
             <Map className="h-4 w-4 text-primary" />
@@ -378,7 +348,7 @@ export function CommandCenter() {
         )}
 
         {/* Geofence */}
-        {(focus === "geo" || focus === "gps" || focus === "dvir" || focus === "ace") && (
+        {(focus === "geo" || focus === "gps" || focus === "dvir") && (
         <div className="p-4 border border-border rounded-lg bg-white h-full flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-primary" />
@@ -480,32 +450,6 @@ export function CommandCenter() {
           ) : null}
         </div>
 
-        {/* Ace */}
-        <div className="p-4 border border-border rounded-lg bg-white h-full flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold text-primary">Ace Insight</p>
-          </div>
-          <textarea
-            className="border border-border rounded-lg px-2 py-1 text-sm text-primary bg-cream min-h-[72px]"
-            value={acePrompt}
-            onChange={(e) => setAcePrompt(e.target.value)}
-          />
-          <button
-            onClick={runAce}
-            disabled={aceLoading}
-            className="px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:bg-dark transition-colors disabled:opacity-50"
-          >
-            {aceLoading ? "Running..." : "Run Ace"}
-          </button>
-          {aceError && <p className="text-[10px] text-primary">{aceError}</p>}
-          {aceResult && (
-            <div className="border border-border rounded-lg p-2 bg-cream/60 text-xs text-primary/80 max-h-32 overflow-y-auto scrollbar-thin">
-              <p className="font-semibold text-primary mb-1">Answer</p>
-              <p>{aceResult.answer}</p>
-            </div>
-          )}
-        </div>
       </div>
       )}
     </section>

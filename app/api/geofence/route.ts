@@ -42,8 +42,8 @@ export async function DELETE(req: Request) {
     if (!zoneId) {
       return NextResponse.json({ error: "zoneId is required" }, { status: 400 });
     }
-    const result = await deleteGeofence(zoneId);
-    return NextResponse.json(result);
+    await deleteGeofence(zoneId);
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("geofence delete error:", error);

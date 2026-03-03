@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { DriverDNAGrid } from "@/components/dna/DriverDNAGrid";
 import type { DNAProfile } from "@/lib/tools/driver-dna";
-import { Sparkles, ArrowLeft, RefreshCw, AlertTriangle, Image } from "lucide-react";
+import { Sparkles, ArrowLeft, RefreshCw, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 export default function DNAPage() {
@@ -87,10 +87,6 @@ export default function DNAPage() {
         )}
         {!hasLoaded && !isLoading && !error ? (
           <div className="text-center py-20">
-            {/* Illustration placeholder */}
-            <div className="w-32 h-32 mx-auto mb-6 illustration-placeholder rounded-lg">
-              <Image className="h-8 w-8 opacity-40" />
-            </div>
             <h2 className="font-editorial text-2xl font-bold text-primary mb-2">
               Driver DNA Profiles
             </h2>

@@ -12,11 +12,12 @@ FleetMind is a conversational AI copilot for fleet managers. Instead of clicking
 
 ### Current Status / Known Notes
 
-- Live GPS and breadcrumbs come from `LogRecord`; the mini replay is a lightweight polyline (no base map). If no points exist for the selected window, the GPS card shows an empty-state message.
-- Alerts are deduped and capped; info-level noise older than 24h is pruned, but warning/critical always persist.
-- Geofence create attaches to the first available company/root group; zones are listed with lat/lon converted from Geotab's x/y points.
-- Ace Insight uses `GetAceResults`; it now waits longer for completion and returns a timeout message if no reply arrives.
-- Driver safety/DNA/DVIR all use `User` with `isDriver: true` (Geotab rejects `Driver`).
+- Live GPS and breadcrumbs come from `LogRecord`; the mini replay is a lightweight SVG polyline. If no points exist for the selected window, the GPS card shows an empty-state message.
+- Alerts are deduped (10-min window per device+rule) and capped at 100; info-level noise older than 24h is pruned, but warning/critical always persist.
+- Geofence list is filtered to the accessible company group — only user-created zones appear, preventing delete errors on system zones.
+- Geofence delete returns `{ success: true }` on success (Geotab's Remove API returns undefined which is not JSON-serializable).
+- Driver safety/DNA/DVIR all use `User` with `isDriver: true` (Geotab rejects the `Driver` type on this server).
+- MultiCall is attempted first; falls back to sequential individual calls if the server returns a MultiCall-not-found error.
 
 ### Core Features
 
@@ -30,7 +31,6 @@ FleetMind is a conversational AI copilot for fleet managers. Instead of clicking
 | **Live GPS Replay** | Breadcrumb fetch via LogRecord with mini SVG replay per vehicle |
 | **Geofences** | Create/delete zones (auto-grouped), list existing, raise entry/exit alerts |
 | **DVIR Snapshot** | Latest inspections, defects open/critical |
-| **Ace Insight (Geotab)** | Uses GetAceResults (dna-planet-orchestration) for natural language questions |
 | **Driver DNA Profiles** | Spotify Wrapped-style personality cards with radar charts & archetype names |
 | **Voice Input** | Hands-free fleet queries via Web Speech API |
 | **PDF Export** | One-click downloadable fleet report with DNA profiles |
@@ -59,8 +59,7 @@ FleetMind is a conversational AI copilot for fleet managers. Instead of clicking
 |  ├── /api/gps-traces — LogRecord breadcrumbs     │
 |  ├── /api/geofence — Zone CRUD (JSON-RPC)        │
 |  ├── /api/dvir — DVIRLog summary                 │
-|  ├── /api/feed — GetFeed(Exception/Status/Logs)  │
-|  └── /api/ace — GetAceResults (Geotab)           │
+|  └── /api/feed — GetFeed(Exception/Status/Logs)  │
 │                                                  │
 |  AI ENGINE                                       │
 |  ├── Google Gemini 2.0 Flash (@ai-sdk/google)    │
@@ -73,6 +72,9 @@ FleetMind is a conversational AI copilot for fleet managers. Instead of clicking
 |  ├── Geotab JSON-RPC API (direct fetch)          │
 |  ├── Session caching + auto-retry                │
 |  └── MultiCall with fallback to sequential calls  │
+│                                                  │
+│  DEPLOYMENT                                      │
+│  └── Firebase App Hosting (Cloud Run + Node 20)  │
 │                                                  │
 │  MYGEOTAB ADD-IN                                 │
 │  └── Standalone HTML briefing page               │
@@ -115,7 +117,7 @@ FleetMind is a conversational AI copilot for fleet managers. Instead of clicking
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/fleetmind.git
+git clone https://github.com/AryanSaxenaa/fleetmind.git
 cd fleetmind
 
 # Install dependencies
@@ -227,6 +229,7 @@ fleetmind/
 - **Google Gemini 2.0 Flash** — Powers all AI reasoning via @ai-sdk/google
 - **Google AI Studio** — API key management (free tier)
 - **Vercel AI SDK** — Google-native streaming and tool calling
+- **Firebase App Hosting** — Production deployment on Cloud Run (Node 20, auto-deploy from GitHub `main`)
 
 ---
 
@@ -244,6 +247,40 @@ No code was hand-written — it's pure vibe coding from spec to ship.
 
 ---
 
+## Deployment (Firebase App Hosting)
+
+FleetMind is deployed on **Firebase App Hosting** (Cloud Run, Node 20) with continuous deployment from the `main` branch.
+
+### Required secrets (set once via Firebase CLI)
+
+```bash
+firebase apphosting:secrets:set GOOGLE_GENERATIVE_AI_API_KEY
+firebase apphosting:secrets:set GEOTAB_DATABASE
+firebase apphosting:secrets:set GEOTAB_USERNAME
+firebase apphosting:secrets:set GEOTAB_PASSWORD
+```
+
+### Grant backend access
+
+```bash
+firebase apphosting:secrets:grantaccess GOOGLE_GENERATIVE_AI_API_KEY --backend fleetmind
+firebase apphosting:secrets:grantaccess GEOTAB_DATABASE --backend fleetmind
+firebase apphosting:secrets:grantaccess GEOTAB_USERNAME --backend fleetmind
+firebase apphosting:secrets:grantaccess GEOTAB_PASSWORD --backend fleetmind
+```
+
+### Deploy
+
+Every `git push` to `main` triggers an automatic build and deploy. No manual steps needed after initial setup.
+
+```bash
+git push
+```
+
+Monitor builds at: `https://console.firebase.google.com/project/geotab-65dad/apphosting`
+
+---
+
 ## License
 
 MIT
@@ -251,9 +288,3 @@ MIT
 ---
 
 *FleetMind v2 — From data to decision, in one conversation.*
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
