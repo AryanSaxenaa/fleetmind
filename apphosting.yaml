@@ -1,0 +1,40 @@
+# Firebase App Hosting configuration for FleetMind
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  runtime: nodejs20
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+  maxInstances: 10
+  minInstances: 0
+
+env:
+  # Google Gemini AI key — stored as a Firebase Secret
+  - variable: GOOGLE_GENERATIVE_AI_API_KEY
+    secret: GOOGLE_GENERATIVE_AI_API_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Geotab credentials — stored as Firebase Secrets
+  - variable: GEOTAB_DATABASE
+    secret: GEOTAB_DATABASE
+    availability:
+      - RUNTIME
+
+  - variable: GEOTAB_USERNAME
+    secret: GEOTAB_USERNAME
+    availability:
+      - RUNTIME
+
+  - variable: GEOTAB_PASSWORD
+    secret: GEOTAB_PASSWORD
+    availability:
+      - RUNTIME
+
+  # Public (non-secret) Geotab server
+  - variable: GEOTAB_SERVER
+    value: my.geotab.com
+    availability:
+      - RUNTIME
