@@ -11,8 +11,23 @@ interface GeotabCredentials {
 
 let cachedCredentials: GeotabCredentials | null = null;
 let cachedServer: string = "my.geotab.com";
+let authPromise: Promise<{ credentials: GeotabCredentials; server: string }> | null = null;
 
 export async function getGeotabCredentials(): Promise<{
+  credentials: GeotabCredentials;
+  server: string;
+}> {
+  if (cachedCredentials) {
+    return { credentials: cachedCredentials, server: cachedServer };
+  }
+  // Serialize concurrent auth requests so we don't hammer the Geotab auth endpoint
+  // if multiple requests arrive simultaneously on a cold start.
+  if (authPromise) return authPromise;
+  authPromise = _doAuthenticate().finally(() => { authPromise = null; });
+  return authPromise;
+}
+
+async function _doAuthenticate(): Promise<{
   credentials: GeotabCredentials;
   server: string;
 }> {
@@ -78,8 +93,14 @@ async function geotabCallRaw<T = any>(
 
   const data = await res.json();
   if (data.error) {
-    // Session expired — retry once
-    if (data.error.message?.includes("session") || data.error.message?.includes("Incorrect login")) {
+    // Session expired — retry once (only for session/token errors, NOT for wrong credentials)
+    const errMsg: string = data.error.message || "";
+    const isSessionExpiry =
+      errMsg.toLowerCase().includes("session") ||
+      errMsg.includes("TokenExpired") ||
+      errMsg.includes("InvalidUserException") ||
+      (errMsg.includes("Incorrect login") && cachedCredentials !== null);
+    if (isSessionExpiry) {
       cachedCredentials = null;
       const fresh = await getGeotabCredentials();
       const retryRes = await fetch(`https://${serverOverride || fresh.server}/apiv1`, {

@@ -301,7 +301,7 @@ export const useFleetStore = create<FleetState>((set, get) => ({
 
     // initial fetch
     poll();
-    const handle = setInterval(poll, 20_000);
+    const handle = setInterval(poll, 60_000); // 60s — Geotab quota is 10 calls/min
     set({ _feedInterval: handle } as any);
   },
 
