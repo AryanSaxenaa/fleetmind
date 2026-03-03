@@ -78,7 +78,7 @@ export function FleetSidebar({ onClose }: FleetSidebarProps) {
         )}
       </div>
 
-      {/* Metric Cards */
+      {/* Metric Cards */}
       <div className="px-6 mt-6 space-y-3">
         <p className="text-[10px] font-semibold text-muted uppercase tracking-widest">
           Fleet Overview
