@@ -4,6 +4,8 @@
 
 **Geotab Vibe Coding Challenge 2026** — Full-stack AI fleet management copilot + autonomous monitoring agent built entirely through vibe coding with AI assistance.
 
+> **📖 [Read the Vibecoding Story](vibecoding-story.md)** — A behind-the-scenes look at every prompt used to build FleetMind, from an empty directory to a fully deployed app. No code was hand-written — just iterative AI conversations.
+
 ---
 
 ## What It Does
