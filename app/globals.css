@@ -116,17 +116,4 @@ body {
   color: #1a1a1a;
 }
 
-/* Image placeholder */
-.illustration-placeholder {
-  background: #f0f0eb;
-  border: 1px dashed var(--color-border);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
+
